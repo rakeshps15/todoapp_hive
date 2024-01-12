@@ -13,61 +13,72 @@ class HomeScreenNotesApp extends StatefulWidget {
 class _HomeScreenNotesAppState extends State<HomeScreenNotesApp> {
   final notes_heading_controller = TextEditingController();
   final notes_content_controller = TextEditingController();
-  final mybox = Hive.box('Notes App Box');
+  late Box mybox = Hive.box('Notes App Box'); // Initialize with a default value
+
+  @override
   void initState() {
-    load_or_read_notes();
     super.initState();
+    openBox(); // Call openBox in the initState
+    load_or_read_notes();
+  }
+
+  // Open the Hive box
+  Future<void> openBox() async {
+    await Hive.initFlutter();
+    mybox = await Hive.openBox('Notes App Box');
   }
 
   List<Map<String, dynamic>> notes = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black38,
       appBar: AppBar(
-          backgroundColor: Colors.black,
-          centerTitle: true,
-          title: Text(
-            "Notes",
-            style: TextStyle(
-                color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
-          ),
-          actions: [
-            PopupMenuButton(itemBuilder: (context) {
-              return [
-                PopupMenuItem(
-                  child: Row(children: [
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.check_box,
-                        color: Colors.black,
-                      ),
+        backgroundColor: Colors.black,
+        centerTitle: true,
+        title: Text(
+          "Notes",
+          style: TextStyle(
+              color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          PopupMenuButton(itemBuilder: (context) {
+            return [
+              PopupMenuItem(
+                child: Row(children: [
+                  IconButton(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.check_box,
+                      color: Colors.black,
                     ),
-                    SizedBox(
-                      width: 10,
+                  ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  const Text("Select"),
+                ]),
+              ),
+              PopupMenuItem(
+                child: Row(children: [
+                  IconButton(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.delete,
+                      color: Colors.black,
                     ),
-                    const Text("Select"),
-                  ]),
-                ),
-                PopupMenuItem(
-                  child: Row(children: [
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.delete,
-                        color: Colors.black,
-                      ),
-                    ),
-                    SizedBox(
-                      width: 10,
-                    ),
-                    const Text("Recently Deleted"),
-                  ]),
-                )
-              ];
-            }),
-          ]),
+                  ),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  const Text("Recently Deleted"),
+                ]),
+              )
+            ];
+          }),
+        ],
+      ),
       body: notes.isEmpty
           ? Scaffold(
         backgroundColor: Colors.black,
@@ -86,16 +97,17 @@ class _HomeScreenNotesAppState extends State<HomeScreenNotesApp> {
             ),
           ),
           Center(
-              child: Positioned(
-                top: MediaQuery.of(context).size.height / 2,
-                child: const Text("No notes added yet!",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500)
-                  // textAlign: TextAlign.center,
-                ),
-              )),
+            child: Positioned(
+              top: MediaQuery.of(context).size.height / 2,
+              child: const Text("No notes added yet!",
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500)
+                // textAlign: TextAlign.center,
+              ),
+            ),
+          ),
         ]),
       )
           : Scaffold(
@@ -147,11 +159,12 @@ class _HomeScreenNotesAppState extends State<HomeScreenNotesApp> {
             }),
       ),
       floatingActionButton: FloatingActionButton(
-          backgroundColor: Colors.white,
-          onPressed: () {
-            showNotes(context, null);
-          },
-          child: Icon(Icons.add,color: Colors.black,)),
+        backgroundColor: Colors.white,
+        onPressed: () {
+          showNotes(context, null);
+        },
+        child: Icon(Icons.add, color: Colors.black),
+      ),
     );
   }
 
@@ -205,14 +218,6 @@ class _HomeScreenNotesAppState extends State<HomeScreenNotesApp> {
                     controller: notes_content_controller,
                     decoration: const InputDecoration(
                       filled: true,
-                      // suffixIcon: IconButton(
-                      //   onPressed: () {
-                      //     Navigator.of(context).pushReplacement(
-                      //         MaterialPageRoute(
-                      //             builder: (context) => NotesfieldPage()));
-                      //   },
-                      //   icon: Icon(Icons.arrow_forward),
-                      // ),
                       fillColor: Colors.grey,
                       border: OutlineInputBorder(),
                       hintText: "Note",
@@ -246,7 +251,10 @@ class _HomeScreenNotesAppState extends State<HomeScreenNotesApp> {
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30)),
                         backgroundColor: Colors.white),
-                    child: Text(itemkey == null ? 'Create Note' : 'Edit Note',style: TextStyle(color: Colors.black),),
+                    child: Text(
+                      itemkey == null ? 'Create Note' : 'Edit Note',
+                      style: TextStyle(color: Colors.black),
+                    ),
                   ),
                 ],
               ),
@@ -265,7 +273,6 @@ class _HomeScreenNotesAppState extends State<HomeScreenNotesApp> {
     await mybox.put(itemkey, updateNotes);
     load_or_read_notes();
   }
-
   void load_or_read_notes() {
     final notes_from_hive = mybox.keys.map((key) {
       final value = mybox.get(key);
